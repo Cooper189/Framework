@@ -17,8 +17,6 @@ var triangl = {
 		}
 	},
 	callCtrl: function (fn, scope) {
-		console.log('ctrl', scope.$scope);
-		console.log('call fn', fn)
 		return fn.apply(null, [scope.$scope]);
 	},
 	temporary: {
@@ -36,7 +34,6 @@ var DOMCreator = {
 			var node = triangl.getRegister(element.name);
 			if(typeof(node) === 'function') {
 				if(node().scope) {
-					console.log(node().scope)
 					scope = scope.$new()
 				}
 				node().link(el, scope, element.value);
@@ -61,7 +58,7 @@ var DOMCreator = {
 }
 
 function ScopeCreator(scope, id) {
-	this.$$watcher = [];
+	this.$$watchers = [];
 	this.$$children = [];
 	this.$$parrent = scope;
 	this.id = id || 0;
@@ -81,15 +78,41 @@ ScopeCreator.prototype.$new = function () {
 ScopeCreator.prototype.$eval = function (val) {
 	var date = 'return this.'+ val;
 	var func = new Function('', date);
-	console.log(func)
 	return func.call(this)
 }
-
+ScopeCreator.prototype.$watch = function (exp, fn) {
+  this.$$watchers.push({
+    exp: exp,
+    fn: fn,
+    last: this.$eval(exp)
+  });
+};
+ScopeCreator.prototype.$digest = function () {
+	var dirty, watcher, current, i;
+	do {
+		dirty = false;
+		for (i = 0; i < this.$$watchers.length; i += 1) {
+			watcher = this.$$watchers[i];
+			current = this.$eval(watcher.exp);
+			if (watcher.last != current) {
+				watcher.last = current;
+				dirty = true;
+				watcher.fn(current);
+			}
+		}
+	} while (dirty);
+	for (i = 0; i < this.$$children.length; i += 1) {
+		this.$$children[i].$digest();
+  	}
+};
 triangl.directive('tg-bind', function () {
 	return {
 		scope: false,
 		link: function (el, scope, val) {
 			el.innerHTML  = scope.$eval(val);
+			scope.$watch(val, function (vals) {
+        		el.innerHTML = vals;
+      		});
 		}
 	}
 });
@@ -112,6 +135,7 @@ triangl.directive('tg-click', function () {
 			el.onclick = function (){
 				console.log('start')
 				scope.$eval(val);
+				scope.$digest();
 			}
 		}
 	}
@@ -119,8 +143,8 @@ triangl.directive('tg-click', function () {
 
 triangl.controller('MainCtrl', function ($scope) {
 	$scope.local = 'hello';
-	$scope.news = 'world';
+	$scope.news = 1;
 	$scope.start = function () {
-		alert('start app')
+		$scope.news++
 	}
 })
