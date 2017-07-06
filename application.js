@@ -79,15 +79,10 @@ ScopeCreator.prototype.$new = function () {
 }
 
 ScopeCreator.prototype.$eval = function (val) {
-	var data;
-	try {
-      with (this) {
-        data = eval(val);
-      }
-    } catch (e) {
-      data = undefined;
-    }
-	return data
+	var date = 'return this.'+ val;
+	var func = new Function('', date);
+	console.log(func)
+	return func.call(this)
 }
 
 triangl.directive('tg-bind', function () {
@@ -112,13 +107,20 @@ triangl.directive('tg-controller', function () {
 triangl.directive('tg-click', function () {
 	return {
 		scope: false,
-		link: function () {
-			console.log('tg-click');
+		link: function (el, scope, val) {
+			console.log('start')
+			el.onclick = function (){
+				console.log('start')
+				scope.$eval(val);
+			}
 		}
 	}
 });
 
 triangl.controller('MainCtrl', function ($scope) {
 	$scope.local = 'hello';
-	$scope.news = 'world'
+	$scope.news = 'world';
+	$scope.start = function () {
+		alert('start app')
+	}
 })
