@@ -3,8 +3,13 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Document</title>
+	<script src="application.js"></script>
 </head>
-<body>
-	
+<body tg-controller="MainCtrl">
+  <span tg-bind="local"></span>
+  <span tg-bind="news"></span>
+  <script>
+	  DOMCreator.bootstrap();
+  </script>
 </body>
 </html>
