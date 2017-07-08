@@ -28,11 +28,13 @@ var DOMCreator = {
 	bootstrap: function () {
 		this.compiler(document.children[0], triangl.getRegister('$rootScope'))
 	},
-	compiler: function (el, scope) {
+	compiler: function (el, scope, flag) {
+		var _element
 		var nodes = this.getDomEl(el);
 		nodes.forEach(function(element) {
+			_element = element.name;
 			var node = triangl.getRegister(element.name);
-			if(typeof(node) === 'function') {
+			if(typeof(node) === 'function' && element.value !== 'tg-scope') {
 				if(node().scope) {
 					scope = scope.$new()
 				}
@@ -42,6 +44,7 @@ var DOMCreator = {
 			}
 		});
 		for (var i = 0; i < el.children.length; i++) {
+			if(_element == 'tg-repeat' && !flag) continue
 			this.compiler(el.children[i], scope);
 		}
 	},
@@ -109,7 +112,8 @@ triangl.directive('tg-bind', function () {
 	return {
 		scope: false,
 		link: function (el, scope, val) {
-			el.innerHTML  = scope.$eval(val);
+			var _loc = scope.$eval(val);
+			el.innerHTML  = _loc || '';
 			scope.$watch(val, function (vals) {
         		el.innerHTML = vals;
       		});
@@ -131,12 +135,35 @@ triangl.directive('tg-click', function () {
 	return {
 		scope: false,
 		link: function (el, scope, val) {
-			console.log('start')
 			el.onclick = function (){
-				console.log('start')
 				scope.$eval(val);
 				scope.$digest();
 			}
+		}
+	}
+});
+triangl.directive('tg-repeat', function () {
+	return {
+		scope: true,
+		link: function (el, scope, val) {
+			var _scope = scope
+			var _current = el;
+			el.attributes[0].value = 'tg-scope'
+			var _el = el;
+			var _data = scope.$eval(val);
+			_scope.info = _data;
+			for (var i = 0; i<_data.length; i++) {
+				scope = _scope.$new()
+				scope.$item = _data[i];
+				scope.$index = i;
+				DOMCreator.compiler(_current, scope, true)
+				if(i < (_data.length - 1)) {
+					_current.parentNode.appendChild(_el.cloneNode(true));
+					_current = _current.nextElementSibling
+				}
+
+			}
+			
 		}
 	}
 });
@@ -147,4 +174,11 @@ triangl.controller('MainCtrl', function ($scope) {
 	$scope.start = function () {
 		$scope.news++
 	}
+})
+triangl.controller('RepeatCtrl', function ($scope) {
+	$scope.base = [
+		{name: 'Hello', title: 'Main title'},
+		{name: 'World'},
+		{name: '!'},
+	]
 })

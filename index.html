@@ -5,10 +5,21 @@
 	<title>Document</title>
 	<script src="application.js"></script>
 </head>
-<body tg-controller="MainCtrl">
-  <span tg-bind="local"></span>
-  <span tg-bind="news"></span>
-  <button tg-click="start()">Increment</button>
+<body>
+  <div  tg-controller="MainCtrl">
+    <span tg-bind="local"></span>
+    <span tg-bind="news"></span>
+    <button tg-click="start()">Increment</button>
+  </div>
+  <div tg-controller="RepeatCtrl">
+    <div tg-repeat="base">
+      <div>
+        <span tg-bind="$item.title"></span>
+      </div>
+      <span tg-bind="$item.name">Hello</span>
+      <span tg-bind="$index">Hello</span>
+    </div>
+  </div>
   <script>
 	  DOMCreator.bootstrap();
   </script>
